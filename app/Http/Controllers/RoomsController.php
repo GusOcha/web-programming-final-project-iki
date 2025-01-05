@@ -8,59 +8,56 @@ use Illuminate\Support\Facades\Validator;
 
 class RoomsController extends Controller
 {
-
     public function index(){
-
         $rooms = Room::active()->get();
 
         return response()->json([
             'message' =>'Rooms Data',
             'data'    => $rooms
         ], 200);
-
     }
 
     public function store(Request $request){
-
-        $validator = Validator::make($request->all(), [
-            'room_name' => 'required',
-            'capacity' => 'required',
-            'facilities' => 'required',
-            'status' => 'required'
-        ]);
-
-        if($validator->fails()){
-
+        if($request->user()->role != 'admin'){
             return response()->json([
-                'message' => 'Semua data wajib diisi!',
-                'data' => $validator->errors()
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
             ], 401);
-
         }
         else{
-
-            $rooms = Room::create([
-                'room_name' => $request->input('room_name'),
-                'capacity' => $request->input('capacity'),
-                'facilities' => $request->input('facilities'),
-                'status' => $request->input('status')
+            $validator = Validator::make($request->all(), [
+                'room_name' => 'required',
+                'capacity' => 'required',
+                'facilities' => 'required',
+                'status' => 'required'
             ]);
-
-            if($rooms){
+    
+            if($validator->fails()){
                 return response()->json([
-                    'message' => 'Room berhasil disimpan!',
-                    'data' => $rooms
-                ], 201);
+                    'message' => 'Semua data wajib diisi!',
+                    'data' => $validator->errors()
+                ], 401);
             }
             else{
-
-                return response()->json([
-                    'message' => 'Room gagal disimpan!'
-                ], 400);
-
+                $rooms = Room::create([
+                    'room_name' => $request->input('room_name'),
+                    'capacity' => $request->input('capacity'),
+                    'facilities' => $request->input('facilities'),
+                    'status' => $request->input('status')
+                ]);
+    
+                if($rooms){
+                    return response()->json([
+                        'message' => 'Room berhasil disimpan!',
+                        'data' => $rooms
+                    ], 201);
+                }
+                else{
+                    return response()->json([
+                        'message' => 'Room gagal disimpan!'
+                    ], 400);
+                }
             }
         }
-
     }
 
     public function show($id){
@@ -82,70 +79,72 @@ class RoomsController extends Controller
     }
 
     public function update(Request $request, $id){
-
-        $validator = Validator::make($request->all(), [
-            'room_name' => 'required',
-            'capacity' => 'required',
-            'facilities' => 'required',
-            'status' => 'required'
-        ]);
-
-        if($validator->fails()){
-
+        if($request->user()->role != 'admin'){
             return response()->json([
-                'message' => 'Semua kolom wajib diisi!',
-                'data' => $validator->errors()
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
             ], 401);
-
         }
         else{
-
-            $rooms = Room::where('id', $id)
-                         ->where('is_deleted', false)
-                         ->update([
-                            'room_name' => $request->input('room_name'),
-                            'capacity' => $request->input('capacity'),
-                            'facilities' => $request->input('facilities'),
-                            'status' => $request->input('status')
-                        ]);
-
-            if($rooms){
-
+            $validator = Validator::make($request->all(), [
+                'room_name' => 'required',
+                'capacity' => 'required',
+                'facilities' => 'required',
+                'status' => 'required'
+            ]);
+    
+            if($validator->fails()){
                 return response()->json([
-                    'message' => 'Room berhasil diupdate',
-                    'data' => $rooms
-                ], 201);
-
+                    'message' => 'Semua kolom wajib diisi!',
+                    'data' => $validator->errors()
+                ], 401);
             }
             else{
-
-                return response()->json([
-                    'message' => 'Room gagal diupdate!'
-                ], 400);
+                $rooms = Room::where('id', $id)
+                             ->where('is_deleted', false)
+                             ->update([
+                                'room_name' => $request->input('room_name'),
+                                'capacity' => $request->input('capacity'),
+                                'facilities' => $request->input('facilities'),
+                                'status' => $request->input('status')
+                            ]);
+    
+                if($rooms){
+                    return response()->json([
+                        'message' => 'Room berhasil diupdate',
+                        'data' => $rooms
+                    ], 201);
+                }
+                else{
+                    return response()->json([
+                        'message' => 'Room gagal diupdate!'
+                    ], 400);
+                }
             }
-
         }
-
     }
 
-    public function destroy($id){
-
-        $rooms = Room::where('id', $id)
+    public function destroy(Request $request, $id){
+        if($request->user()->role != 'admin'){
+            return response()->json([
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
+            ], 401);
+        }
+        else{
+            $rooms = Room::where('id', $id)
                      ->where('is_deleted', false)
                      ->first();
 
-        if($rooms){
-            $rooms->softDelete();
-            return response()->json([
-                'message' => 'Room berhasil dihapus!'
-            ], 200);
+            if($rooms){
+                $rooms->softDelete();
+                return response()->json([
+                    'message' => 'Room berhasil dihapus!'
+                ], 200);
+            }
+            else{
+                return response()->json([
+                    'message' => 'Room tidak ditemukan!'
+                ], 404);
+            }
         }
-        else{
-            return response()->json([
-                'message' => 'Room tidak ditemukan!'
-            ], 404);
-        }
-
     }
-
 }

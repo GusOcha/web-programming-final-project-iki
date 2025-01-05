@@ -8,148 +8,164 @@ use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
 {
+    public function index(Request $request){
+        if($request->user()->role != 'admin'){
+            return response()->json([
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
+            ], 401);
+        }
+        else{
+            $users = User::active()->get();
 
-    public function index(){
-
-        $users = User::active()->get();
-
-        return response()->json([
-            'message' =>'Users Data',
-            'data'    => $users
-        ], 200);
-
+            return response()->json([
+                'message' =>'Users Data',
+                'data'    => $users
+            ], 200);
+        }
     }
 
     public function store(Request $request){
-
-        $validator = Validator::make($request->all(), [
-            'unit_id' => 'required',
-            'user_name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-            'role' => 'required'
-        ]);
-
-        if($validator->fails()){
-
+        if($request->user()->role != 'admin'){
             return response()->json([
-                'message' => 'Semua data wajib diisi!',
-                'data' => $validator->errors()
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
             ], 401);
-
         }
         else{
-
-            $users = User::create([
-                'unit_id' => $request->input('unit_id'),
-                'user_name' => $request->input('user_name'),
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
-                'role' => $request->input('role')
+            $validator = Validator::make($request->all(), [
+                'unit_id' => 'required',
+                'user_name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+                'role' => 'required'
             ]);
-
-            if($users){
+    
+            if($validator->fails()){
+    
                 return response()->json([
-                    'message' => 'User berhasil disimpan!',
-                    'data' => $users
-                ], 201);
+                    'message' => 'Semua data wajib diisi!',
+                    'data' => $validator->errors()
+                ], 401);
+    
             }
             else{
-
-                return response()->json([
-                    'message' => 'User gagal disimpan!'
-                ], 400);
-
+                $users = User::create([
+                    'unit_id' => $request->input('unit_id'),
+                    'user_name' => $request->input('user_name'),
+                    'email' => $request->input('email'),
+                    'password' => $request->input('password'),
+                    'role' => $request->input('role')
+                ]);
+    
+                if($users){
+                    return response()->json([
+                        'message' => 'User berhasil disimpan!',
+                        'data' => $users
+                    ], 201);
+                }
+                else{
+                    return response()->json([
+                        'message' => 'User gagal disimpan!'
+                    ], 400);
+                }
             }
         }
-
     }
 
-    public function show($id){
-        $users = User::where('id', $id)
+    public function show(Request $request, $id){
+        if($request->user()->role != 'admin'){
+            return response()->json([
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
+            ], 401);
+        }
+        else{
+            $users = User::where('id', $id)
                     -> where('is_deleted', false)
                     -> first();
 
-        if($users){
-            return response()->json([
-                'message' => 'User berhasil ditemukan!',
-                'data' => $users
-            ], 200);
-        }
-        else{
-            return response()->json([
-                'message' => 'User tidak ditemukan!'
-            ], 404);
+            if($users){
+                return response()->json([
+                    'message' => 'User berhasil ditemukan!',
+                    'data' => $users
+                ], 200);
+            }
+            else{
+                return response()->json([
+                    'message' => 'User tidak ditemukan!'
+                ], 404);
+            }
         }
     }
 
     public function update(Request $request, $id){
-
-        $validator = Validator::make($request->all(), [
-            'unit_id' => 'required',
-            'user_name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-            'role' => 'required'
-        ]);
-
-        if($validator->fails()){
-
+        if($request->user()->role != 'admin'){
             return response()->json([
-                'message' => 'Semua kolom wajib diisi!',
-                'data' => $validator->errors()
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
             ], 401);
-
         }
         else{
-
-            $users = User::where('id', $id)
-                         ->where('is_deleted', false)
-                         ->update([
-                            'unit_id' => $request->input('unit_id'),
-                            'user_name' => $request->input('user_name'),
-                            'email' => $request->input('email'),
-                            'password' => $request->input('password'),
-                            'role' => $request->input('role')
-                        ]);
-
-            if($users){
-
+            $validator = Validator::make($request->all(), [
+                'unit_id' => 'required',
+                'user_name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+                'role' => 'required'
+            ]);
+    
+            if($validator->fails()){
                 return response()->json([
-                    'message' => 'User berhasil diupdate',
-                    'data' => $users
-                ], 201);
-
+                    'message' => 'Semua kolom wajib diisi!',
+                    'data' => $validator->errors()
+                ], 401);
             }
             else{
-
-                return response()->json([
-                    'message' => 'User gagal diupdate!'
-                ], 400);
+                $users = User::where('id', $id)
+                             ->where('is_deleted', false)
+                             ->update([
+                                'unit_id' => $request->input('unit_id'),
+                                'user_name' => $request->input('user_name'),
+                                'email' => $request->input('email'),
+                                'password' => $request->input('password'),
+                                'role' => $request->input('role')
+                            ]);
+    
+                if($users){
+                    return response()->json([
+                        'message' => 'User berhasil diupdate',
+                        'data' => $users
+                    ], 201);
+    
+                }
+                else{
+                    return response()->json([
+                        'message' => 'User gagal diupdate!'
+                    ], 400);
+                }
             }
-
         }
-
     }
 
-    public function destroy($id){
-
-        $users = User::where('id', $id)
+    public function destroy(Request $request, $id){
+        if($request->user()->role != 'admin'){
+            return response()->json([
+                'message' => 'Anda tidak memiliki izin untuk melakukan aksi ini!'
+            ], 401);
+        }
+        else{
+            $users = User::where('id', $id)
                      ->where('is_deleted', false)
                      ->first();
 
-        if($users){
-            $users->softDelete();
-            return response()->json([
-                'message' => 'User berhasil dihapus!'
-            ], 200);
+            if($users){
+                $users->softDelete();
+                return response()->json([
+                    'message' => 'User berhasil dihapus!'
+                ], 200);
+            }
+            else{
+                return response()->json([
+                    'message' => 'User tidak ditemukan!'
+                ], 404);
+            }
         }
-        else{
-            return response()->json([
-                'message' => 'User tidak ditemukan!'
-            ], 404);
-        }
-
     }
-
 }
