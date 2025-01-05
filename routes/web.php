@@ -17,8 +17,11 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
+// Register
+$router->post('/api/register', ['uses' => 'LoginController@register']);
+
 // Login
-$router->get('/login', ['uses' => 'LoginController@index']);
+$router->post('/api/login', ['uses' => 'LoginController@login']);
 
 $router->group(['prefix' => 'api', 'middleware'=>'auth'], function() use ($router){
     // Units Table CRUD

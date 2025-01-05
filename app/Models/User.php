@@ -13,7 +13,11 @@ class User extends Model{
     ];
 
     protected $fillable = [
-        'unit_id', 'user_name', 'email', 'password', 'role', 'is_deleted'
+        'unit_id', 'user_name', 'email', 'password', 'role', 'api_token', 'is_deleted'
+    ];
+
+    protected $hidden = [
+
     ];
 
     public function scopeActive($query){

@@ -18,6 +18,7 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('role', ['admin', 'user'])->default('user');
+            $table->string('api_token');
             $table->boolean('is_deleted')->default(false);
             $table->timestamps();
 
